@@ -1,0 +1,17 @@
+# Fraud Model MLOps - Python Dependencies
+# Pre-installed on Databricks ML Runtime: mlflow, sklearn, pyspark, numpy, pandas
+# Add only packages NOT in the runtime.
+
+# SDK
+databricks-sdk>=0.30.0
+
+# Testing
+pytest>=7.0
+pytest-cov>=4.0
+
+# Monitoring
+scipy>=1.10.0        # KS-test for drift detection
+
+# Optional: hyperparameter tuning
+# hyperopt>=0.2.7
+# optuna>=3.0

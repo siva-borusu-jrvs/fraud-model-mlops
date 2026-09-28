@@ -1,0 +1,12 @@
+resources:
+  registered_models:
+    fraud_classifier:
+      name: ${var.catalog}.${var.schema}.${var.model_name}
+      comment: "Fraud detection classifier - GBT model for online transaction scoring."
+
+  experiments:
+    fraud_experiment:
+      name: "/Shared/fraud-model-experiment-${bundle.target}"
+      permissions:
+        - level: CAN_MANAGE
+          user_name: siva.borusu@jrvs.ca

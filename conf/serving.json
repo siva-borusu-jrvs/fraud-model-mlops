@@ -1,0 +1,22 @@
+{
+  "name": "fraud-classifier-endpoint",
+  "config": {
+    "served_entities": [
+      {
+        "entity_name": "ml.fraud.fraud_classifier",
+        "entity_version": null,
+        "workload_size": "Small",
+        "scale_to_zero_enabled": true
+      }
+    ],
+    "auto_capture_config": {
+      "catalog_name": "ml",
+      "schema_name": "fraud",
+      "enabled": true
+    }
+  },
+  "tags": [
+    {"key": "project", "value": "fraud-model-mlops"},
+    {"key": "env", "value": "production"}
+  ]
+}

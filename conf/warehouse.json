@@ -1,0 +1,18 @@
+{
+  "name": "fraud-model-warehouse",
+  "cluster_size": "2X-Small",
+  "min_num_clusters": 1,
+  "max_num_clusters": 1,
+  "auto_stop_mins": 15,
+  "warehouse_type": "PRO",
+  "enable_serverless_compute": true,
+  "channel": {
+    "name": "CHANNEL_NAME_CURRENT"
+  },
+  "tags": {
+    "custom_tags": [
+      {"key": "project", "value": "fraud-model-mlops"},
+      {"key": "team", "value": "data-science"}
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+# Alerts powered by Lakehouse Monitoring (Data Quality Monitor).
+# The DQ Monitor auto-generates drift metrics tables:
+#   {table}_profile_metrics  - per-column statistics per window
+#   {table}_drift_metrics    - drift scores (chi-square, KS, etc.) vs baseline
+# These alerts query the monitor's output tables, not custom drift tables.
+#
+# Drift alert triggers the retrain job via webhook notification.
+resources:
+  alerts:
+    drift_threshold_alert:
+      display_name: "[${bundle.target}] Fraud Model - Drift Detected"
+      query_text: |
+        SELECT
+          window_end,
+          column_name,
+          drift_type,
+          ks_stat,
+          chi_squared_stat,
+          COALESCE(ks_stat, chi_squared_stat) AS drift_score
+        FROM ${var.catalog}.${var.schema}.fraud_predictions_drift_metrics
+        WHERE window_end >= current_date() - INTERVAL 1 DAY
+          AND (
+            (ks_stat IS NOT NULL AND ks_stat > 0.05)
+            OR (chi_squared_stat IS NOT NULL AND chi_squared_stat > 0.05)
+          )
+        ORDER BY drift_score DESC
+        LIMIT 1
+      warehouse_id: ${var.warehouse_id}
+
+      evaluation:
+        comparison_operator: "GREATER_THAN"
+        source:
+          name: "drift_score"
+          display: "drift_score"
+        threshold:
+          value:
+            double_value: 0.0
+        notification:
+          notify_on_ok: false
+          subscriptions:
+            - user_email: siva.borusu@jrvs.ca
+            # Add webhook destination to trigger retrain job:
+            # - destination_id: "<webhook-destination-id>"
+
+      schedule:
+        pause_status: "UNPAUSED"
+        quartz_cron_schedule: "0 30 8 * * ?"
+        timezone_id: "America/Toronto"
+
+    prediction_volume_alert:
+      display_name: "[${bundle.target}] Fraud Model - Prediction Volume Drop"
+      query_text: |
+        SELECT COUNT(*) AS prediction_count
+        FROM ${var.catalog}.${var.schema}.fraud_predictions
+        WHERE prediction_ts >= current_timestamp() - INTERVAL 1 HOUR
+      warehouse_id: ${var.warehouse_id}
+
+      evaluation:
+        comparison_operator: "LESS_THAN"
+        source:
+          name: "prediction_count"
+          display: "prediction_count"
+        threshold:
+          value:
+            double_value: 100.0
+        notification:
+          notify_on_ok: false
+          subscriptions:
+            - user_email: siva.borusu@jrvs.ca
+
+      schedule:
+        pause_status: "UNPAUSED"
+        quartz_cron_schedule: "0 0 * * * ?"
+        timezone_id: "America/Toronto"

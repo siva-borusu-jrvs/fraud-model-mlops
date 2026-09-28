@@ -1,0 +1,46 @@
+bundle:
+  name: fraud-model-mlops
+
+workspace:
+  host: https://adb-5944275879339631.11.azuredatabricks.net
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for all tables and models
+    default: ml_dev
+  schema:
+    description: Schema within the catalog
+    default: fraud_dev
+  model_name:
+    description: Registered model name in Unity Catalog
+    default: fraud_classifier_dev
+  endpoint_name:
+    description: Model Serving endpoint name
+    default: fraud-classifier-dev
+  warehouse_id:
+    description: SQL warehouse ID for alerts and ad hoc queries
+    lookup:
+      warehouse: "fraud-model-warehouse"
+
+targets:
+  dev:
+    default: true
+    mode: development
+    variables:
+      catalog: ml_dev
+      schema: fraud_dev
+      model_name: fraud_classifier_dev
+      endpoint_name: fraud-classifier-dev
+
+  prod:
+    mode: production
+    variables:
+      catalog: ml
+      schema: fraud
+      model_name: fraud_classifier
+      endpoint_name: fraud-classifier
+    run_as:
+      user_name: siva.borusu@jrvs.ca
