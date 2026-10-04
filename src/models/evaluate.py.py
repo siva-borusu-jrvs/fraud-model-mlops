@@ -1,15 +1,25 @@
 # Databricks notebook source
+# DBTITLE 1,Title
 # MAGIC %md
-# MAGIC # Model Evaluation
-# MAGIC Compares candidate vs champion model; promotes if it beats the primary metric.
+# MAGIC # Model Evaluation — Quality Gate
+# MAGIC Offline validation of the challenger model before A/B deployment.
+# MAGIC Checks minimum metric thresholds; does NOT promote or swap aliases.
+# MAGIC Fails the pipeline if the challenger is below acceptable quality.
 
 # COMMAND ----------
 
+# DBTITLE 1,Imports and Config
 import mlflow
 from mlflow.tracking import MlflowClient
 from src.config import CFG
+from src.utils import get_logger
 
+logger = get_logger("models.evaluate")
 client = MlflowClient()
+
+_pyfunc_model = f"{CFG.fq_model_name}_pyfunc"
+logger.info(f"Model: {_pyfunc_model}")
+logger.info(f"Mode:  quality gate (offline validation)")
 
 # COMMAND ----------
 
@@ -18,50 +28,63 @@ client = MlflowClient()
 
 # COMMAND ----------
 
-def get_latest_version(alias: str = "champion"):
-    """Return model version number for the given alias, or None."""
+# DBTITLE 1,Helper Functions
+def _get_version_by_alias(alias: str):
+    """Return ModelVersion for the given alias, or None."""
     try:
-        mv = client.get_model_version_by_alias(CFG.fq_model_name, alias)
-        return int(mv.version)
+        return client.get_model_version_by_alias(_pyfunc_model, alias)
     except mlflow.exceptions.MlflowException:
         return None
 
 
-def _set_alias(run_id: str, alias: str):
-    """Set alias on the model version produced by the given run."""
-    versions = client.search_model_versions(f"run_id='{run_id}'")
-    if versions:
-        client.set_registered_model_alias(CFG.fq_model_name, alias, versions[0].version)
+def _get_metric(run_id: str, metric: str) -> float:
+    """Fetch a single metric value from a run."""
+    return client.get_run(run_id).data.metrics.get(metric, 0.0)
 
 # COMMAND ----------
 
+# DBTITLE 1,Quality Gate
 # MAGIC %md
-# MAGIC ## Compare & Promote
+# MAGIC ## Quality Gate
 
 # COMMAND ----------
 
-def compare_and_promote(candidate_run_id: str, primary_metric: str = "roc_auc", min_improvement: float = 0.005) -> bool:
-    """Compare candidate to champion; promote if better."""
-    champion_version = get_latest_version("champion")
-    if champion_version is None:
-        _set_alias(candidate_run_id, "champion")
-        print("No champion yet - auto-promoted candidate.")
-        return True
+# DBTITLE 1,Quality Gate
+def validate_challenger(min_recall: float = 0.30, min_precision: float = 0.40, min_f1: float = 0.35):
+    """Quality gate — verify challenger meets minimum metric thresholds.
 
-    champion_run = client.get_model_version(CFG.fq_model_name, champion_version)
-    champ_score = client.get_run(champion_run.run_id).data.metrics.get(primary_metric, 0)
-    cand_score = client.get_run(candidate_run_id).data.metrics.get(primary_metric, 0)
+    Does NOT promote or swap aliases. If the challenger fails any threshold,
+    raises RuntimeError to stop the pipeline before deployment.
+    Metrics come from the pyfunc run (copied from sklearn training run
+    by pyfunc_wrapper.py).
+    """
+    challenger_mv = _get_version_by_alias("challenger")
+    if challenger_mv is None:
+        raise RuntimeError("No @challenger alias found on pyfunc model. Run pyfunc_wrapper.py first.")
 
-    print(f"Champion {primary_metric}: {champ_score:.4f}")
-    print(f"Candidate {primary_metric}: {cand_score:.4f}")
+    recall = _get_metric(challenger_mv.run_id, "recall")
+    precision = _get_metric(challenger_mv.run_id, "precision")
+    f1 = _get_metric(challenger_mv.run_id, "f1_score")
 
-    if cand_score >= champ_score + min_improvement:
-        _set_alias(candidate_run_id, "champion")
-        client.set_registered_model_alias(CFG.fq_model_name, "previous-champion", champion_version)
-        print("Candidate PROMOTED to champion.")
-        return True
-    print("Champion retained.")
-    return False
+    logger.info(f"@challenger (v{challenger_mv.version}) offline metrics:")
+    logger.info(f"  recall:    {recall:.4f}  (min: {min_recall})")
+    logger.info(f"  precision: {precision:.4f}  (min: {min_precision})")
+    logger.info(f"  f1_score:  {f1:.4f}  (min: {min_f1})")
+
+    failures = []
+    if recall < min_recall:
+        failures.append(f"recall {recall:.4f} < {min_recall}")
+    if precision < min_precision:
+        failures.append(f"precision {precision:.4f} < {min_precision}")
+    if f1 < min_f1:
+        failures.append(f"f1_score {f1:.4f} < {min_f1}")
+
+    if failures:
+        msg = f"Challenger v{challenger_mv.version} REJECTED: {'; '.join(failures)}"
+        logger.error(msg)
+        raise RuntimeError(msg)
+
+    logger.info(f"Challenger v{challenger_mv.version} PASSED quality gate — ready for A/B deployment.")
 
 # COMMAND ----------
 
@@ -70,5 +93,8 @@ def compare_and_promote(candidate_run_id: str, primary_metric: str = "roc_auc", 
 
 # COMMAND ----------
 
-# candidate_run_id = "<run-id-from-training>"
-# compare_and_promote(candidate_run_id)
+# DBTITLE 1,Run
+# Runs automatically as a DABs job task.
+# Gates the challenger before 50/50 deployment.
+# Promotion happens later in ab_test.py based on production metrics.
+validate_challenger(min_recall=0.30, min_precision=0.40, min_f1=0.35)

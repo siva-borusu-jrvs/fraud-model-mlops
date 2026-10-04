@@ -1,0 +1,49 @@
+# Model quality degradation alert.
+# Fires when weighted recall, precision, or F1 drop below thresholds
+# in the latest monitoring window.
+# Source: Lakehouse Monitor output table _profile_metrics.
+# Schedule: daily at 08:30 ET (30 min after the monitor's 08:00 refresh).
+resources:
+  alerts:
+    model_quality_alert:
+      display_name: "[${bundle.target}] Fraud Model - Quality Degradation"
+      query_text: |
+        SELECT
+          window.start           AS window_start,
+          window.end             AS window_end,
+          granularity,
+          model_version,
+          accuracy_score,
+          precision.weighted     AS precision_weighted,
+          recall.weighted        AS recall_weighted,
+          f1_score.weighted      AS f1_weighted
+        FROM ${var.catalog}.${var.schema}.customer_n_transactions_drift_profile_metrics
+        WHERE column_name = ':table'
+          AND log_type = 'INPUT'
+          AND slice_key IS NULL
+          AND window.start >= current_date() - INTERVAL 1 DAY
+          AND (
+            recall.weighted    < 0.40
+            OR precision.weighted < 0.50
+            OR f1_score.weighted  < 0.45
+          )
+        LIMIT 1
+      warehouse_id: ${var.warehouse_id}
+
+      evaluation:
+        comparison_operator: "GREATER_THAN"
+        source:
+          name: "window_start"
+          display: "window_start"
+        threshold:
+          value:
+            double_value: 0.0
+        notification:
+          notify_on_ok: false
+          subscriptions:
+            - user_email: ${var.notify_email}
+
+      schedule:
+        pause_status: "UNPAUSED"
+        quartz_cron_schedule: "0 30 8 * * ?"
+        timezone_id: "America/Toronto"

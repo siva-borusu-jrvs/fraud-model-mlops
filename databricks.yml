@@ -7,40 +7,62 @@ workspace:
 include:
   - resources/*.yml
 
+# ── Variables ──────────────────────────────────────────────────────
+# All environment-specific values are declared here and overridden
+# per target. Notebooks receive them via job base_parameters;
+# alert queries and registered_model reference them directly.
 variables:
   catalog:
     description: Unity Catalog catalog for all tables and models
-    default: ml_dev
+    default: mlops
   schema:
     description: Schema within the catalog
-    default: fraud_dev
+    default: siva_borusu
   model_name:
-    description: Registered model name in Unity Catalog
-    default: fraud_classifier_dev
+    description: Registered model name (without catalog.schema prefix)
+    default: fraud_model_credit_card
   endpoint_name:
     description: Model Serving endpoint name
-    default: fraud-classifier-dev
+    default: fraud-model-credit-card
   warehouse_id:
-    description: SQL warehouse ID for alerts and ad hoc queries
-    lookup:
-      warehouse: "fraud-model-warehouse"
+    description: SQL warehouse ID for alerts and monitoring queries
+  git_branch:
+    description: Git branch for job notebook source
+    default: dev
+  experiment_name:
+    description: MLflow experiment path for training runs
+    default: /Shared/fraud-model-experiment-dev
+  notify_email:
+    description: Email address for alert and job failure notifications
+    default: siva.borusu@jrvs.ca
 
+# ── Targets ────────────────────────────────────────────────────────
+# Both targets use the same workspace; environment isolation is at
+# the catalog level (mlops vs mlops_prod). This demonstrates how
+# a single bundle handles multi-environment promotion without any
+# manual work — only the variables change.
 targets:
   dev:
     default: true
     mode: development
+    # dev mode auto-prefixes job/pipeline names with [dev <user>]
     variables:
-      catalog: ml_dev
-      schema: fraud_dev
-      model_name: fraud_classifier_dev
-      endpoint_name: fraud-classifier-dev
+      catalog: mlops
+      schema: siva_borusu
+      warehouse_id: "960eea0736a2e75b"
+      git_branch: dev
+      experiment_name: /Shared/fraud-model-experiment-dev
 
   prod:
     mode: production
+    workspace:
+      root_path: /Workspace/Users/siva.borusu@jrvs.ca/.bundle/${bundle.name}/${bundle.target}
     variables:
-      catalog: ml
-      schema: fraud
-      model_name: fraud_classifier
-      endpoint_name: fraud-classifier
+      catalog: mlops_prod
+      schema: siva_borusu
+      endpoint_name: fraud-model-credit-card-prod
+      warehouse_id: "960eea0736a2e75b"
+      git_branch: main
+      experiment_name: /Shared/fraud-model-experiment-prod
     run_as:
       user_name: siva.borusu@jrvs.ca

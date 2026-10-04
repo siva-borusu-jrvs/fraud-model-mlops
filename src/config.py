@@ -38,23 +38,31 @@ class ProjectConfig:
     """
 
     # ── Unity Catalog coordinates (overridable via DABs) ───────────
-    catalog: str = "ml_dev"
-    schema: str = "fraud_dev"
+    catalog: str = "mlops"
+    schema: str = "siva_borusu"
 
     # ── Tables ─────────────────────────────────────────────────────
-    raw_transactions_table: str = "raw_transactions"
-    feature_table: str = "fraud_features"
+    raw_transactions_table: str = "transactions"
+    feature_table: str = "customer_n_transactions"
+    customer_features_table: str = "customer_features"
+    customer_features_drift_table: str = "customer_features_drift"
     predictions_table: str = "fraud_predictions"
     drift_metrics_table: str = "drift_metrics"
 
     # ── Model (overridable via DABs) ───────────────────────────────
-    registered_model_name: str = "fraud_classifier_dev"
-    experiment_name: str = "/Shared/fraud-model-experiment-dev"
+    registered_model_name: str = "fraud_model_credit_card"
+    experiment_name: str = "/Users/siva.borusu@jrvs.ca/fraud-model-experiment"
+    model_champion_alias: str = "champion"
+    model_challenger_alias: str = "challenger"
 
     # ── Serving (overridable via DABs) ─────────────────────────────
-    endpoint_name: str = "fraud-classifier-dev"
+    endpoint_name: str = "fraud-model-credit-card"
     endpoint_workload_size: str = "Small"
     endpoint_scale_to_zero: bool = True
+
+    # ── SQL Warehouse (for pyfunc serving lookups) ─────────────────
+    # Set as env var DATABRICKS_SQL_WAREHOUSE_ID on the serving endpoint
+    sql_warehouse_id: str = "960eea0736a2e75b"
 
     # ── Monitoring / Alerts ────────────────────────────────────────
     drift_threshold_psi: float = 0.2
@@ -76,6 +84,14 @@ class ProjectConfig:
         return f"{self.catalog}.{self.schema}.{self.feature_table}"
 
     @property
+    def fq_customer_features_table(self) -> str:
+        return f"{self.catalog}.{self.schema}.{self.customer_features_table}"
+
+    @property
+    def fq_customer_features_drift_table(self) -> str:
+        return f"{self.catalog}.{self.schema}.{self.customer_features_drift_table}"
+
+    @property
     def fq_predictions_table(self) -> str:
         return f"{self.catalog}.{self.schema}.{self.predictions_table}"
 
@@ -87,13 +103,21 @@ class ProjectConfig:
     def fq_model_name(self) -> str:
         return f"{self.catalog}.{self.schema}.{self.registered_model_name}"
 
+    @property
+    def champion_model_uri(self) -> str:
+        return f"models:/{self.fq_model_name}@{self.model_champion_alias}"
+
+    @property
+    def challenger_model_uri(self) -> str:
+        return f"models:/{self.fq_model_name}@{self.model_challenger_alias}"
+
 
 def build_config() -> ProjectConfig:
     """Build config from job parameters (DABs) or use dev defaults."""
-    catalog = _get_param("catalog", "ml_dev")
-    schema = _get_param("schema", "fraud_dev")
-    model_name = _get_param("model_name", "fraud_classifier_dev")
-    endpoint_name = _get_param("endpoint_name", "fraud-classifier-dev")
+    catalog = _get_param("catalog", "mlops")
+    schema = _get_param("schema", "siva_borusu")
+    model_name = _get_param("model_name", "fraud_model_credit_card")
+    endpoint_name = _get_param("endpoint_name", "fraud-model-credit-card")
 
     return ProjectConfig(
         catalog=catalog,
