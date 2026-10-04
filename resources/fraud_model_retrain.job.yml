@@ -20,13 +20,24 @@ resources:
       job_clusters:
         - job_cluster_key: ml_cluster
           new_cluster:
-            spark_version: "15.4.x-ml-scala2.12"
+            spark_version: "15.4.x-cpu-ml-scala2.12"
             node_type_id: "Standard_DS3_v2"
             num_workers: 1
             data_security_mode: "SINGLE_USER"
             custom_tags:
               project: "fraud-model-mlops"
               environment: "${bundle.target}"
+
+      # ── Job-level parameters (shared across all tasks) ────────
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+        - name: model_name
+          default: ${var.model_name}
+        - name: endpoint_name
+          default: ${var.endpoint_name}
 
       tasks:
         # ── Model training + evaluation ───────────────────────────
@@ -37,10 +48,6 @@ resources:
           notebook_task:
             notebook_path: src/models/train.py
             source: GIT
-            base_parameters:
-              catalog: ${var.catalog}
-              schema: ${var.schema}
-              model_name: ${var.model_name}
 
         - task_key: pyfunc_wrapper
           depends_on:
@@ -49,10 +56,6 @@ resources:
           notebook_task:
             notebook_path: src/models/pyfunc_wrapper.py
             source: GIT
-            base_parameters:
-              catalog: ${var.catalog}
-              schema: ${var.schema}
-              model_name: ${var.model_name}
 
         - task_key: evaluate
           depends_on:
@@ -61,10 +64,6 @@ resources:
           notebook_task:
             notebook_path: src/models/evaluate.py
             source: GIT
-            base_parameters:
-              catalog: ${var.catalog}
-              schema: ${var.schema}
-              model_name: ${var.model_name}
 
         # ── Deployment ────────────────────────────────────────────
         - task_key: deploy
@@ -74,11 +73,6 @@ resources:
           notebook_task:
             notebook_path: src/serving/deploy.py
             source: GIT
-            base_parameters:
-              catalog: ${var.catalog}
-              schema: ${var.schema}
-              model_name: ${var.model_name}
-              endpoint_name: ${var.endpoint_name}
 
       schedule:
         quartz_cron_expression: "0 0 6 ? * MON"

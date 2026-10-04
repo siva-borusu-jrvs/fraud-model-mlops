@@ -366,3 +366,53 @@ logger.info(
     f"| scored with {MODEL_URI}"
 )
 display(spark.table("mlops.siva_borusu.customer_n_transactions_baseline").limit(5))
+
+# COMMAND ----------
+
+# DBTITLE 1,Add challenger predictions to drift table
+# ── Duplicate drift rows with slightly perturbed predictions for the
+#    challenger model so the dashboard can compare champion vs challenger.
+
+from pyspark.sql.functions import col, lit, rand, when, greatest, least
+from src.utils import get_logger
+
+logger = get_logger("notebooks.synthetic_data")
+MODEL_URI = "models:/mlops.siva_borusu.fraud_model_credit_card@champion"
+
+champion_df = spark.table("mlops.siva_borusu.customer_n_transactions_drift").filter(
+    col("model_version") == MODEL_URI
+)
+
+CHALLENGER_URI = "models:/mlops.siva_borusu.fraud_model_credit_card@challenger"
+
+# Perturb predictions: add noise ±0.08, clamp to [0, 1]
+challenger_df = (
+    champion_df
+    .withColumn(
+        "prediction",
+        greatest(lit(0.0), least(lit(1.0), col("prediction") + (rand(seed=77) - 0.5) * 0.16))
+    )
+    .withColumn("model_version", lit(CHALLENGER_URI))
+)
+
+# Remove any stale challenger rows (idempotency), then append new ones
+from delta.tables import DeltaTable
+
+DeltaTable.forName(spark, "mlops.siva_borusu.customer_n_transactions_drift").delete(
+    col("model_version") == CHALLENGER_URI
+)
+
+challenger_df.write.format("delta").mode("append").saveAsTable(
+    "mlops.siva_borusu.customer_n_transactions_drift"
+)
+
+result = spark.table("mlops.siva_borusu.customer_n_transactions_drift")
+logger.info(
+    f"customer_n_transactions_drift: {result.count()} total rows "
+    f"({result.filter(col('model_version') == MODEL_URI).count()} champion, "
+    f"{result.filter(col('model_version') == CHALLENGER_URI).count()} challenger)"
+)
+display(result.groupBy("model_version").count())
+
+# COMMAND ----------
+

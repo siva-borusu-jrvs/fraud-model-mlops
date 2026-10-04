@@ -18,7 +18,7 @@ resources:
       job_clusters:
         - job_cluster_key: ml_cluster
           new_cluster:
-            spark_version: "15.4.x-ml-scala2.12"
+            spark_version: "15.4.x-cpu-ml-scala2.12"
             node_type_id: "Standard_DS3_v2"
             num_workers: 1
             data_security_mode: "SINGLE_USER"
@@ -26,17 +26,22 @@ resources:
               project: "fraud-model-mlops"
               environment: "${bundle.target}"
 
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+        - name: model_name
+          default: ${var.model_name}
+        - name: endpoint_name
+          default: ${var.endpoint_name}
+
       tasks:
         - task_key: resolve_ab_test
           job_cluster_key: ml_cluster
           notebook_task:
             notebook_path: src/serving/ab_test.py
             source: GIT
-            base_parameters:
-              catalog: ${var.catalog}
-              schema: ${var.schema}
-              model_name: ${var.model_name}
-              endpoint_name: ${var.endpoint_name}
 
       schedule:
         quartz_cron_expression: "0 0 9 ? * FRI"
