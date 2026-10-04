@@ -48,7 +48,7 @@ jobs:
         run: pytest tests/unit/ -v
 
   deploy:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     needs: checks
     runs-on: ubuntu-latest
     environment: ${{ inputs.target }}
