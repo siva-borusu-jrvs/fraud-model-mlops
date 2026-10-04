@@ -18,15 +18,19 @@ resources:
         git_provider: gitHub
         git_branch: ${var.git_branch}
 
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+        - name: model_name
+          default: ${var.model_name}
+
       tasks:
         - task_key: create_monitor
           notebook_task:
             notebook_path: src/monitoring/drift.py
             source: GIT
-            base_parameters:
-              catalog: ${var.catalog}
-              schema: ${var.schema}
-              model_name: ${var.model_name}
 
       # No schedule - this is a manual, on-demand job
 
