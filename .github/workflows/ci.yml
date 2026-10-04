@@ -4,6 +4,14 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      target:
+        description: Databricks bundle target to deploy
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
 
 jobs:
   checks:
@@ -20,8 +28,38 @@ jobs:
       - name: Install check tools
         run: python -m pip install pytest ruff
 
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Validate dev bundle
+        run: databricks bundle validate -t dev
+        env:
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      - name: Validate prod bundle
+        run: databricks bundle validate -t prod
+        env:
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
       - name: Lint
         run: ruff check src tests --select E4,E7,E9 --ignore E401,E402,E741
 
       - name: Run unit tests
         run: pytest tests/unit/ -v
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Deploy bundle
+        run: databricks bundle deploy -t "${{ inputs.target }}"
+        env:
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
