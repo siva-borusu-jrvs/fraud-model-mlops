@@ -94,19 +94,14 @@ pytest tests/integration/ -v -m integration
 
 ## Architecture
 
-```
-Raw Data → Ingestion → Feature Store (Delta) → Training (MLflow)
-                                                     ↓
-                                              Model Registry (UC)
-                                                     ↓
-                                           Serving Endpoint (A/B)
-                                                     ↓
-                                           Inference Table
-                                                     ↓
-                                      DQ Monitor (Lakehouse Monitoring)
-                                                     ↓
-                                    SQL Alert → Webhook → Retrain Job
-```
+![Fraud detection MLOps architecture](docs/model-architecture.svg)
+
+The diagram shows the offline training and champion/challenger quality gate, online
+feature enrichment and A/B serving, inference logging, unified drift and model-quality
+monitoring, and the automated and manual retraining feedback paths. The serving
+wrapper looks up customer features in Delta; it does not depend on a separate online
+feature store. Alert-triggered retraining requires configuring the optional webhook;
+the retraining job also runs on its weekly schedule.
 
 ## Deployment (DABs)
 

@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Fraud detection MLOps architecture</title>
+  <desc id="desc">Databricks architecture for fraud-model training, champion and challenger serving, inference logging, unified drift and quality monitoring, alerting, and retraining.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#53657a"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#2878b8"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#23845d"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#b7791f"/>
+    </marker>
+    <style>
+      .bg { fill: #f5f8fc; }
+      .title { font: 700 29px "Segoe UI", Arial, sans-serif; fill: #172b4d; }
+      .subtitle { font: 14px "Segoe UI", Arial, sans-serif; fill: #5b6b80; }
+      .lane { fill: #fff; stroke: #d8e1ec; stroke-width: 1.5; }
+      .lane-title { font: 700 14px "Segoe UI", Arial, sans-serif; letter-spacing: 1.1px; fill: #51647a; }
+      .card { fill: #fff; stroke: #b9c8d9; stroke-width: 1.5; }
+      .data { fill: #eff8f5; stroke: #79b89e; }
+      .ml { fill: #f0f5ff; stroke: #89a9db; }
+      .serving { fill: #eef7ff; stroke: #6fa8d7; }
+      .monitor { fill: #fff8eb; stroke: #d9b56b; }
+      .action { fill: #f4f1ff; stroke: #a394d1; }
+      .title-sm { font: 700 15px "Segoe UI", Arial, sans-serif; fill: #20334d; }
+      .body { font: 13px "Segoe UI", Arial, sans-serif; fill: #45566c; }
+      .small { font: 11.5px "Segoe UI", Arial, sans-serif; fill: #607086; }
+      .tag { font: 700 10px "Segoe UI", Arial, sans-serif; letter-spacing: .5px; fill: #53657a; }
+      .line { fill: none; stroke: #53657a; stroke-width: 2; marker-end: url(#arrow); }
+      .line-blue { fill: none; stroke: #2878b8; stroke-width: 2.2; marker-end: url(#arrowBlue); }
+      .line-green { fill: none; stroke: #23845d; stroke-width: 2.2; marker-end: url(#arrowGreen); }
+      .line-amber { fill: none; stroke: #b7791f; stroke-width: 2; marker-end: url(#arrowAmber); }
+      .dash { stroke-dasharray: 7 5; }
+      .divider { stroke: #e4eaf1; stroke-width: 1; }
+      .label-bg { fill: #fff; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1440" height="1080"/>
+  <text class="title" x="48" y="48">Fraud Detection · MLOps Architecture</text>
+  <text class="subtitle" x="48" y="74">Databricks Lakehouse · MLflow Model Registry · Model Serving · Lakehouse Monitoring</text>
+
+  <rect class="lane" x="36" y="100" width="1368" height="292" rx="16"/>
+  <text class="lane-title" x="58" y="128">01  /  DATA &amp; MODEL LIFECYCLE</text>
+
+  <rect class="card data" x="60" y="157" width="202" height="88" rx="12"/>
+  <text class="title-sm" x="78" y="184">Fraud data</text>
+  <text class="body" x="78" y="207">Transactions + outcomes</text>
+  <text class="small" x="78" y="228">Raw / reference data in Delta</text>
+
+  <rect class="card data" x="60" y="274" width="202" height="82" rx="12"/>
+  <text class="title-sm" x="78" y="301">Feature engineering</text>
+  <text class="body" x="78" y="324">Customer &amp; transaction features</text>
+  <text class="small" x="78" y="343">Delta feature table</text>
+
+  <rect class="card ml" x="318" y="188" width="218" height="122" rx="12"/>
+  <text class="title-sm" x="338" y="217">Experimentation &amp; training</text>
+  <text class="body" x="338" y="242">Train challenger on features</text>
+  <text class="body" x="338" y="263">Tune, evaluate &amp; track runs</text>
+  <text class="small" x="338" y="287">MLflow experiment · scheduled job</text>
+
+  <rect class="card ml" x="583" y="188" width="224" height="122" rx="12"/>
+  <text class="title-sm" x="603" y="217">Champion / challenger gate</text>
+  <text class="body" x="603" y="242">Offline quality thresholds</text>
+  <text class="body" x="603" y="263">Compare against champion</text>
+  <text class="small" x="603" y="287">Reject failed candidate; keep champion</text>
+
+  <rect class="card ml" x="853" y="188" width="218" height="122" rx="12"/>
+  <text class="title-sm" x="873" y="217">MLflow Model Registry</text>
+  <text class="body" x="873" y="242">Unity Catalog registered models</text>
+  <text class="body" x="873" y="263">@champion · @challenger aliases</text>
+  <text class="small" x="873" y="287">Versioned model artifacts</text>
+
+  <rect class="card action" x="1117" y="188" width="250" height="122" rx="12"/>
+  <text class="title-sm" x="1137" y="217">A/B test resolution</text>
+  <text class="body" x="1137" y="242">Compare production model metrics</text>
+  <text class="body" x="1137" y="263">Promote winner; archive loser</text>
+  <text class="small" x="1137" y="287">Update aliases + endpoint traffic</text>
+
+  <path class="line-green" d="M161 245 V274"/>
+  <path class="line-green" d="M262 315 H290 V249 H318"/>
+  <path class="line" d="M536 249 H583"/>
+  <path class="line" d="M807 249 H853"/>
+  <path class="line-blue" d="M962 310 V432 H709 V472"/>
+  <text class="small label-bg" x="977" y="341">approved versions</text>
+  <path class="line-blue" d="M1242 310 V456 H824 V472"/>
+  <text class="small label-bg" x="1252" y="344">traffic update</text>
+
+  <rect class="lane" x="36" y="415" width="1368" height="270" rx="16"/>
+  <text class="lane-title" x="58" y="443">02  /  ONLINE INFERENCE &amp; OBSERVABILITY</text>
+
+  <rect class="card" x="60" y="488" width="172" height="98" rx="12"/>
+  <text class="title-sm" x="80" y="518">Transaction request</text>
+  <text class="body" x="80" y="542">Client / application</text>
+  <text class="small" x="80" y="565">Payload: transaction fields</text>
+
+  <rect class="card serving" x="273" y="472" width="264" height="130" rx="12"/>
+  <text class="title-sm" x="293" y="501">PyFunc wrapper + online lookup</text>
+  <text class="body" x="293" y="526">Extract payload + derive time features</text>
+  <text class="body" x="293" y="548">Look up customer features in Delta</text>
+  <text class="small" x="293" y="576">Features loaded at model startup</text>
+
+  <rect class="card serving" x="579" y="472" width="260" height="130" rx="12"/>
+  <text class="title-sm" x="599" y="501">Model Serving endpoint</text>
+  <text class="body" x="599" y="526">Champion + challenger models</text>
+  <text class="body" x="599" y="548">50 / 50 traffic split for A/B test</text>
+  <text class="small" x="599" y="576">Winner can receive 100% after resolution</text>
+
+  <rect class="card serving" x="884" y="488" width="184" height="98" rx="12"/>
+  <text class="title-sm" x="904" y="518">Fraud prediction</text>
+  <text class="body" x="904" y="542">Score returned to client</text>
+  <text class="small" x="904" y="565">Decision + model identity</text>
+
+  <rect class="card data" x="1110" y="488" width="257" height="98" rx="12"/>
+  <text class="title-sm" x="1130" y="518">Inference / payload table</text>
+  <text class="body" x="1130" y="542">AI Gateway request &amp; response logs</text>
+  <text class="small" x="1130" y="565">Usage, predictions, model ID</text>
+
+  <path class="line-blue" d="M232 537 H273"/>
+  <path class="line-blue" d="M537 537 H579"/>
+  <path class="line-blue" d="M839 537 H884"/>
+  <path class="line-green dash" d="M161 356 V641 H405 V602"/>
+  <text class="small label-bg" x="177" y="629">Delta feature lookup</text>
+  <path class="line-blue" d="M976 586 V654 H146 V586"/>
+  <text class="small label-bg" x="477" y="648">prediction response</text>
+  <path class="line" d="M709 602 V646 H1238 V586"/>
+  <text class="small label-bg" x="1084" y="639">AI Gateway logging</text>
+  <path class="line" d="M1238 586 V751 H453 V769"/>
+  <text class="small label-bg" x="1250" y="618">logged production data</text>
+
+  <rect class="lane" x="36" y="710" width="1368" height="328" rx="16"/>
+  <text class="lane-title" x="58" y="738">03  /  MONITORING, ALERTS &amp; FEEDBACK</text>
+
+  <rect class="card data" x="60" y="783" width="205" height="94" rx="12"/>
+  <text class="title-sm" x="80" y="813">Baseline data</text>
+  <text class="body" x="80" y="837">Reference feature distribution</text>
+  <text class="small" x="80" y="858">Delta Lakehouse tables</text>
+
+  <rect class="card monitor" x="319" y="769" width="268" height="122" rx="12"/>
+  <text class="title-sm" x="339" y="798">Unified drift &amp; quality monitor</text>
+  <text class="body" x="339" y="823">Data, concept &amp; model drift</text>
+  <text class="body" x="339" y="845">Prediction distribution + model quality</text>
+  <text class="small" x="339" y="871">Lakehouse Monitoring · daily refresh</text>
+
+  <rect class="card monitor" x="641" y="783" width="205" height="94" rx="12"/>
+  <text class="title-sm" x="661" y="813">Monitor metrics</text>
+  <text class="body" x="661" y="837">Profile + drift metrics</text>
+  <text class="small" x="661" y="858">Delta output tables</text>
+
+  <rect class="card action" x="898" y="769" width="212" height="122" rx="12"/>
+  <text class="title-sm" x="918" y="798">Dashboard &amp; SQL alerts</text>
+  <text class="body" x="918" y="823">Drift, PSI &amp; model quality</text>
+  <text class="body" x="918" y="845">Champion / challenger comparison</text>
+  <text class="small" x="918" y="871">AI/BI dashboard · scheduled alerts</text>
+
+  <rect class="card action" x="1160" y="769" width="207" height="122" rx="12"/>
+  <text class="title-sm" x="1180" y="798">Notify &amp; respond</text>
+  <text class="body" x="1180" y="823">Email · Teams · Jira</text>
+  <text class="body" x="1180" y="845">Review alert + decide action</text>
+  <text class="small" x="1180" y="871">Webhook retraining is optional</text>
+
+  <rect class="card ml" x="363" y="929" width="269" height="79" rx="12"/>
+  <text class="title-sm" x="383" y="958">Automated retraining</text>
+  <text class="body" x="383" y="982">Weekly schedule or configured alert webhook</text>
+
+  <rect class="card" x="711" y="929" width="269" height="79" rx="12"/>
+  <text class="title-sm" x="731" y="958">Manual retraining</text>
+  <text class="body" x="731" y="982">Human review → retrain / investigate</text>
+
+  <path class="line-green" d="M265 830 H319"/>
+  <path class="line" d="M587 830 H641"/>
+  <path class="line" d="M846 830 H898"/>
+  <path class="line" d="M1110 830 H1160"/>
+  <path class="line" d="M1238 891 V913 H846 V929"/>
+  <path class="line-amber dash" d="M1160 860 H1072 V968 H632"/>
+  <text class="small label-bg" x="1008" y="956">optional webhook</text>
+  <path class="line" d="M1160 876 H1090 V969 H980"/>
+  <path class="line" d="M363 968 H292 V249 H318"/>
+  <text class="small label-bg" x="298" y="946">new training run</text>
+  <path class="line" d="M711 968 H675 V249 H583"/>
+  <text class="small label-bg" x="687" y="924">review / retrain</text>
+  <path class="line-blue" d="M1367 249 H1384 V716 H743 V783"/>
+  <text class="small label-bg" x="1246" y="701">production model scores</text>
+
+  <line class="divider" x1="58" y1="1024" x2="1380" y2="1024"/>
+  <text class="small" x="60" y="1053">Solid arrows: configured project flow  ·  Dashed amber arrow: optional alert-to-retrain webhook integration</text>
+</svg>
