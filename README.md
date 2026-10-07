@@ -94,19 +94,7 @@ pytest tests/integration/ -v -m integration
 
 ## Architecture
 
-```
-Raw Data → Ingestion → Feature Store (Delta) → Training (MLflow)
-                                                     ↓
-                                              Model Registry (UC)
-                                                     ↓
-                                           Serving Endpoint (A/B)
-                                                     ↓
-                                           Inference Table
-                                                     ↓
-                                      DQ Monitor (Lakehouse Monitoring)
-                                                     ↓
-                                    SQL Alert → Webhook → Retrain Job
-```
+![Fraud detection MLOps architecture](docs/model-architecture.png)
 
 ## Deployment (DABs)
 
