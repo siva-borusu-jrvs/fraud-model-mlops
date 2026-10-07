@@ -94,14 +94,7 @@ pytest tests/integration/ -v -m integration
 
 ## Architecture
 
-![Fraud detection MLOps architecture](docs/model-architecture.svg)
-
-The diagram shows the offline training and champion/challenger quality gate, online
-feature enrichment and A/B serving, inference logging, unified drift and model-quality
-monitoring, and the automated and manual retraining feedback paths. The serving
-wrapper looks up customer features in Delta; it does not depend on a separate online
-feature store. Alert-triggered retraining requires configuring the optional webhook;
-the retraining job also runs on its weekly schedule.
+![Fraud detection MLOps architecture](docs/model-architecture.png)
 
 ## Deployment (DABs)
 
